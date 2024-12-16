@@ -244,12 +244,22 @@ class AWSAnthropic(AWSModel):
             },
         ]
         return (n, query_args)
+    
+    def log_usage(self, response):
+        response_header = response["ResponseMetadata"]["HTTPHeaders"]
+        input_token_size = response_header["x-amzn-bedrock-input-token-count"]
+        output_token_size = response_header["x-amzn-bedrock-output-token-count"]
+        total_token_size = int(input_token_size) + int(output_token_size)
+        print(f"Anthropic Input Token Response Usage: {input_token_size}")
+        print(f"Anthropic Output Token Response Usage: {output_token_size}")
+        print(f"Anthropic Total Token Response Usage: {total_token_size}")
 
     def _call_model(self, body: str) -> str:
         response = self.aws_provider.predictor.invoke_model(
             modelId=self._model_name,
             body=body,
         )
+        self.log_usage(response)
         response_body = json.loads(response["body"].read())
         return response_body["content"][0]["text"]
 
